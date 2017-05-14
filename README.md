@@ -6,7 +6,7 @@ A family cookbook of data `R`ecipes.
     - Row totals using `rowwise()`, `do()`, and `case_when()`
 - [Utility](#utility)
     - `%gin%`: A reimagination of `%in%` using `grepl()` for partial string matching
-- [Distinct)](#distinct)
+- [Distinct](#distinct)
     - Keeping distinct instances of a category using `if_else` and `distinct`
 
 ## Rowwise
