@@ -6,6 +6,8 @@ A family cookbook of data `R`ecipes.
     - Row totals using `rowwise()`, `do()`, and `case_when()`
 - [Utility](#utility)
     - `%gin%`: A reimagination of `%in%` using `grepl()` for partial string matching
+- [Distinct)](#distinct)
+    - Keeping distinct instances of a category using `if_else` and `distinct`
 
 ## Rowwise
 
@@ -55,4 +57,41 @@ case_when(
 "a" %in% "apple"
 # %gin% evaluates to TRUE
 "a" %gin% "apple"
+```
+
+## Distinct
+
+* Keeping distinct instances of a category using `if_else` and `distinct`
+```r
+# setup
+library(tidyverse)
+df <- tribble(
+  ~category, ~race, ~gender, ~frpl, ~race.x.gender,
+  "percent proficient", "YES",    "NO",  "NO",           "NO",
+  "percent proficient",  "NO",    "NO",  "NO",           "NO",
+  "percent proficient",  "NO",   "YES",  "NO",           "NO",
+  "number proficient", "YES",    "NO",  "NO",           "NO",
+  "number proficient",  "NO",    "NO", "YES",           "NO",
+  "number proficient",  "NO",    "NO",  "NO",           "NO"
+)
+# answer 1
+df %>%
+  group_by(category) %>%
+  mutate(
+    race = TRUE & "YES" %in% race,
+    gender = TRUE & "YES" %in% gender,
+    frpl = TRUE & "YES" %in% frpl,
+    race.x.gender = TRUE & "YES" %in% race.x.gender
+  ) %>%
+  distinct(.keep_all = TRUE)
+# answer 2
+df %>%
+  group_by(category) %>%
+  mutate(
+    race = if_else("YES" %in% race, "YES", "NO"),
+    gender = if_else("YES" %in% gender, "YES", "NO"),
+    frpl = if_else("YES" %in% frpl, "YES", "NO"),
+    race.x.gender = if_else("YES" %in% race.x.gender, "YES", "NO")
+  ) %>%
+  distinct(.keep_all = TRUE)
 ```
