@@ -7,7 +7,7 @@ A family cookbook of data `R`ecipes.
 - [Utility](#utility)
     - `%gin%`: A reimagination of `%in%` using `grepl()` for partial string matching
 - [Distinct](#distinct)
-    - Keeping distinct instances of a category using `if_else` and `distinct`
+    - Keep distinct instances of a category using `if_else()` and `distinct()`
 
 ## Rowwise
 
@@ -61,18 +61,16 @@ case_when(
 
 ## Distinct
 
-* Keeping distinct instances of a category using `if_else` and `distinct`
+* Keep distinct instances of a category using `if_else()` and `distinct()`
 ```r
 # setup
 library(tidyverse)
-df <- tribble(
-  ~category, ~race, ~gender, ~frpl, ~race.x.gender,
-  "percent proficient", "YES",    "NO",  "NO",           "NO",
-  "percent proficient",  "NO",    "NO",  "NO",           "NO",
-  "percent proficient",  "NO",   "YES",  "NO",           "NO",
-  "number proficient", "YES",    "NO",  "NO",           "NO",
-  "number proficient",  "NO",    "NO", "YES",           "NO",
-  "number proficient",  "NO",    "NO",  "NO",           "NO"
+df <- data_frame(
+  category = c("% proficient", "% proficient", "% proficient", "n proficient", "n proficient", "n proficient"),
+  race = c("YES", "NO", "NO", "YES", "NO", "NO"),
+  gender = c("NO", "NO", "YES", "NO", "NO", "NO"),
+  frpl = c("NO", "NO", "NO", "NO", "YES", "NO"),
+  race.x.gender = c("NO", "NO", "NO", "NO", "NO", "NO")
 )
 # answer 1
 df %>%
