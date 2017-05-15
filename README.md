@@ -7,7 +7,7 @@ A family cookbook of data `R`ecipes.
 - [Utility](#utility)
     - `%gin%`: A reimagination of `%in%` using `grepl()` for partial string matching
 - [Distinct](#distinct)
-    - Keeping distinct instances of a category using `if_else` and `distinct`
+    - Keep distinct instances of a category using `if_else()` and `distinct()`
 
 ## Rowwise
 
@@ -61,7 +61,7 @@ case_when(
 
 ## Distinct
 
-* Keeping distinct instances of a category using `if_else` and `distinct`
+* Keep distinct instances of a category using `if_else()` and `distinct()`
 ```r
 # setup
 library(tidyverse)
