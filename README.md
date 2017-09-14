@@ -24,18 +24,18 @@ df <- data_frame(
 # mutate with if_else doesn't work
 a <- df %>% mutate(v_sum =
     if_else(
-        !(is.na(.$v1) & is.na(.$v2) & is.na(.$v3)),
-        sum(.$v1, .$v2, .$v3, na.rm = TRUE), 
+        !(is.na(v1) & is.na(v2) & is.na(v3)),
+        sum(v1, v2, v3, na.rm = TRUE), 
         if_else(
-            is.na(.$v1) & is.na(.$v2) & is.na(.$v3),
+            is.na(v1) & is.na(v2) & is.na(v3),
             99,
             NA_real_)
     ))
 # mutate with case_when doesn't work
 b <- df %>% mutate(v_sum =
     case_when(
-        !(is.na(.$v1) & is.na(.$v2) & is.na(.$v3)) ~ sum(.$v1, .$v2, .$v3, na.rm = TRUE),
-        is.na(.$v1) & is.na(.$v2) & is.na(.$v3) ~ 99,
+        !(is.na(v1) & is.na(v2) & is.na(v3)) ~ sum(v1, v2, v3, na.rm = TRUE),
+        is.na(v1) & is.na(v2) & is.na(v3) ~ 99,
         TRUE ~ NA_real_)
 )
 # rowwise and do with case_when works, but requires binding the result back to the original data frame
