@@ -2,16 +2,18 @@
 
 A family cookbook of data `R`ecipes.
 
-- [Rowwise](#rowwise)
-    - Row totals using `rowwise()`, `do()`, and `case_when()`
-- [Utility](#utility)
+- [Row totals](#row)
+    - Calculate row totals using `rowwise()`, `do()`, and `case_when()`
+- [Partial string matching](#partial)
     - `%gin%`: A reimagination of `%in%` using `grepl()` for partial string matching
-- [Distinct](#distinct)
+- [Keep distinct categories](#keep)
     - Keep distinct instances of a category using `if_else()` and `distinct()`
+- [Reinstall packages after a major R update](#reinstall)
+    - Reinstall packages from your previous R 3.x library path after a major R update.
 
-## Rowwise
+## Row totals
 
-* Row totals using `rowwise()`, `do()`, and `case_when()`
+* Calculate row totals using `rowwise()`, `do()`, and `case_when()`
 ```r
 # setup
 library(tidyverse)
@@ -47,7 +49,7 @@ case_when(
 ) %>% unlist %>% as_tibble %>% bind_cols(df, .)
 ```
 
-## Utility
+## Partial string matching
 
 * `%gin%`: A reimagination of `%in%` using `grepl()` for partial string matching
 ```r
@@ -59,7 +61,7 @@ case_when(
 "a" %gin% "apple"
 ```
 
-## Distinct
+## Keep distinct categories
 
 * Keep distinct instances of a category using `if_else()` and `distinct()`
 ```r
@@ -92,4 +94,26 @@ df %>%
     race.x.gender = if_else("YES" %in% race.x.gender, "YES", "NO")
   ) %>%
   distinct(.keep_all = TRUE)
+```
+
+## Reinstall packages after a major R update
+
+* Reinstall packages from your previous R 3.x library path after a major R update. Note that RStudio will prompt you to restart R repeatedly; to keep the script going keep pressing "No" when this happens.
+```r
+# setup
+require(tidyverse)
+# get the new and old R versions as strings
+new_r <- str_sub(.rs.rVersionString(), 1L, 3L)
+old_r <- as.character(as.numeric(new_r) - 0.1)
+# get your new and old R library paths
+new_l <- .libPaths()
+old_l <- str_replace(new_l, new_r, old_r)
+# get the list of old installed packages
+pkg_list <- as.list(list.files(old_l))
+# install all packages listed in pkg_list
+install_all <- function(x) {
+  print(x)
+  install.packages(x, quiet = TRUE)
+}
+quietly(lapply(pkg_list, install_all))
 ```
