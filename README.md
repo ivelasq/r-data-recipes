@@ -2,13 +2,13 @@
 
 A family cookbook of data `R`ecipes.
 
-- [Row totals](#row)
+- [Row totals](#row-totals)
     - Calculate row totals using `rowwise()`, `do()`, and `case_when()`
-- [Partial string matching](#partial)
+- [Partial string matching](#partial-string-matching)
     - `%gin%`: A reimagination of `%in%` using `grepl()` for partial string matching
-- [Keep distinct categories](#keep)
+- [Keep distinct categories](#keep-distinct-categories)
     - Keep distinct instances of a category using `if_else()` and `distinct()`
-- [Reinstall packages after a major R update](#reinstall)
+- [Reinstall packages after a major R update](#reinstall-packages-after-a-major-r-update)
     - Reinstall packages from your previous R 3.x library path after a major R update.
 
 ## Row totals
