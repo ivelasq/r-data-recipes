@@ -127,7 +127,6 @@ quietly(lapply(pkg_list, install_all))
 # setup
 suppressPackageStartupMessages(library(dplyr))
 library(purrr)
-suppressPackageStartupMessages(library(rlang))
 library(stats)
 library(tibble)
 library(tidyr)
@@ -155,7 +154,7 @@ unnest_wide <- function(df) {
   unique_vals <- list()
   df_lst <- list()
   for (i in seq_along(list_cols)) {
-    unique_vals[[i]] <- stats::na.omit(unique(rlang::squash_chr(df[[list_cols[i]]])))
+    unique_vals[[i]] <- stats::na.omit(unique(unlist(df[[list_cols[i]]])))
     df_lst[[i]] <- dplyr::select(df, rowid, list_cols[i])
     df_lst[[i]] <- dplyr::mutate(df_lst[[i]], !! list_vals[i] := df[[list_cols[i]]])
     df_lst[[i]] <- tidyr::unnest(df_lst[[i]])
