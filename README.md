@@ -10,6 +10,8 @@ A family cookbook of data `R`ecipes.
     - Keep distinct instances of a category using `if_else()` and `distinct()`
 - [Reinstall packages after a major R update](#reinstall-packages-after-a-major-r-update)
     - Reinstall packages from your previous R 3.x library path after a major R update.
+- [Unnest all list-cols into columns](#unnest-all-list-cols-into-columns)
+    - Unnest all list-cols in a data.frame into columns for each unique element.
 
 ## Row totals
 
@@ -117,3 +119,71 @@ install_all <- function(x) {
 }
 quietly(lapply(pkg_list, install_all))
 ```
+
+## Unnest all list-cols into columns
+
+* Unnest all list-cols in a data frame into columns for each unique element.
+``` r
+# setup
+suppressPackageStartupMessages(library(dplyr))
+library(purrr)
+suppressPackageStartupMessages(library(rlang))
+library(stats)
+library(tibble)
+library(tidyr)
+# create `a`, a tbl with 1 list-col, note "four" is not lined up with "five" in row 3
+a <- tibble::tribble(
+  ~v1,     ~v2,
+  "one",   c("four", "five", "six"),
+  "two",   NA_character_,
+  "three", "five"
+)
+# create `b`, an even more complicated tbl with 2 list-cols, separated by an atomic v3
+b <- tibble::tribble(
+  ~v1,     ~v2,                      ~v3,    ~v4,
+  "one",   c("four", "five", "six"), "four", c("four", "five", "six"),
+  "two",   NA_character_,            "five", "four",
+  "three", "five",                   "six",  "six"
+)
+# implement `unnest_wide()`
+unnest_wide <- function(df) {
+  stopifnot(is.data.frame(df))
+  df <- tibble::rowid_to_column(df)
+  list_index <- purrr::map_int(df, is.list)
+  list_cols <- names(list_index)[list_index == 1L]
+  list_vals <- paste0(list_cols, ".")
+  unique_vals <- list()
+  df_lst <- list()
+  for (i in seq_along(list_cols)) {
+    unique_vals[[i]] <- stats::na.omit(unique(rlang::squash_chr(df[[list_cols[i]]])))
+    df_lst[[i]] <- dplyr::select(df, rowid, list_cols[i])
+    df_lst[[i]] <- dplyr::mutate(df_lst[[i]], !! list_vals[i] := df[[list_cols[i]]])
+    df_lst[[i]] <- tidyr::unnest(df_lst[[i]])
+    df_lst[[i]] <- dplyr::mutate(df_lst[[i]], !! list_cols[i] := match(df_lst[[i]][[list_cols[i]]], unique_vals[[i]]))
+    df_lst[[i]] <- tidyr::spread(df_lst[[i]], !! list_cols[i], !! list_vals[i], convert = TRUE, sep = "_")
+    df_lst[[i]] <- dplyr::select_if(df_lst[[i]], !grepl(paste0(list_cols[i], "_NA"), colnames(df_lst[[i]])))
+    df <- dplyr::select(df, -(!! list_cols[i]))
+    df <- dplyr::left_join(df, df_lst[[i]], by = "rowid")
+  }
+  df <- dplyr::select(df, -rowid)
+  return(df)
+}
+# run on `a` and `b`
+(a_wide <- unnest_wide(a))
+#> # A tibble: 3 x 4
+#>   v1    v2_1  v2_2  v2_3 
+#>   <chr> <chr> <chr> <chr>
+#> 1 one   four  five  six  
+#> 2 two   <NA>  <NA>  <NA> 
+#> 3 three <NA>  five  <NA>
+(b_wide <- unnest_wide(b))
+#> # A tibble: 3 x 8
+#>   v1    v3    v2_1  v2_2  v2_3  v4_1  v4_2  v4_3 
+#>   <chr> <chr> <chr> <chr> <chr> <chr> <chr> <chr>
+#> 1 one   four  four  five  six   four  five  six  
+#> 2 two   five  <NA>  <NA>  <NA>  four  <NA>  <NA> 
+#> 3 three six   <NA>  five  <NA>  <NA>  <NA>  six
+```
+
+Created on 2018-07-14 by the [reprex
+package](http://reprex.tidyverse.org) (v0.2.0).
