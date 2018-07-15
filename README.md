@@ -11,7 +11,7 @@ A family cookbook of data `R`ecipes.
 - [Reinstall packages after a major R update](#reinstall-packages-after-a-major-r-update)
     - Reinstall packages from your previous R 3.x library path after a major R update.
 - [Unnest all list-cols into columns](#unnest-all-list-cols-into-columns)
-    - Unnest all list-cols in a data.frame into columns for each unique element.
+    - Unnest all list-cols in a data frame into columns for each unique element.
 
 ## Row totals
 
