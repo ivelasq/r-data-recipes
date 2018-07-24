@@ -103,7 +103,8 @@ df %>%
 * Reinstall packages from your previous R 3.x library path after a major R update. Note that RStudio will prompt you to restart R repeatedly; to keep the script going keep pressing "No" when this happens.
 ```r
 # setup
-require(tidyverse)
+if (!require("tidyverse")) install.packages("tidyverse")
+library(tidyverse)
 # get the new and old R versions as strings
 new_r <- str_sub(.rs.rVersionString(), 1L, 3L)
 old_r <- as.character(as.numeric(new_r) - 0.1)
