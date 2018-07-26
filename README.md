@@ -146,27 +146,27 @@ b <- tibble::tribble(
   "three", "five",                   "six",  "six"
 )
 # implement `unnest_wide()`
-unnest_wide <- function(df) {
-  stopifnot(is.data.frame(df))
-  df <- tibble::rowid_to_column(df)
-  list_index <- purrr::map_int(df, is.list)
-  list_cols <- names(list_index)[list_index == 1L]
-  list_vals <- paste0(list_cols, ".")
+unnest_wide <- function(.data) {
+  stopifnot(is.data.frame(.data))
+  .data <- tibble::rowid_to_column(.data)
+  lst_index <- purrr::map_int(.data, is.list)
+  lst_cols <- names(lst_index)[lst_index == 1L]
+  lst_vals <- paste0(lst_cols, ".")
   unique_vals <- list()
-  df_lst <- list()
-  for (i in seq_along(list_cols)) {
-    unique_vals[[i]] <- stats::na.omit(unique(unlist(df[[list_cols[i]]])))
-    df_lst[[i]] <- dplyr::select(df, rowid, list_cols[i])
-    df_lst[[i]] <- dplyr::mutate(df_lst[[i]], !! list_vals[i] := df[[list_cols[i]]])
-    df_lst[[i]] <- tidyr::unnest(df_lst[[i]])
-    df_lst[[i]] <- dplyr::mutate(df_lst[[i]], !! list_cols[i] := match(df_lst[[i]][[list_cols[i]]], unique_vals[[i]]))
-    df_lst[[i]] <- tidyr::spread(df_lst[[i]], !! list_cols[i], !! list_vals[i], convert = TRUE, sep = "_")
-    df_lst[[i]] <- dplyr::select_if(df_lst[[i]], !grepl(paste0(list_cols[i], "_NA"), colnames(df_lst[[i]])))
-    df <- dplyr::select(df, -(!! list_cols[i]))
-    df <- dplyr::left_join(df, df_lst[[i]], by = "rowid")
+  tmp <- list()
+  for (i in seq_along(lst_cols)) {
+    unique_vals[[i]] <- stats::na.omit(unique(unlist(.data[[lst_cols[i]]])))
+    tmp[[i]] <- dplyr::select(.data, rowid, lst_cols[i])
+    tmp[[i]] <- dplyr::mutate(tmp[[i]], !!lst_vals[i] := .data[[lst_cols[i]]])
+    tmp[[i]] <- tidyr::unnest(tmp[[i]])
+    tmp[[i]] <- dplyr::mutate(tmp[[i]], !!lst_cols[i] := match(tmp[[i]][[lst_cols[i]]], unique_vals[[i]]))
+    tmp[[i]] <- tidyr::spread(tmp[[i]], !!lst_cols[i], !!lst_vals[i], convert = TRUE, sep = "_")
+    tmp[[i]] <- dplyr::select_if(tmp[[i]], !grepl(paste0(lst_cols[i], "_NA"), colnames(tmp[[i]])))
+    .data <- dplyr::select(.data, -(!!lst_cols[i]))
+    .data <- dplyr::left_join(.data, tmp[[i]], by = "rowid")
   }
-  df <- dplyr::select(df, -rowid)
-  return(df)
+  .data <- dplyr::select(.data, -rowid)
+  return(.data)
 }
 # run on `a` and `b`
 (a_wide <- unnest_wide(a))
@@ -185,5 +185,4 @@ unnest_wide <- function(df) {
 #> 3 three six   <NA>  five  <NA>  <NA>  <NA>  six
 ```
 
-Created on 2018-07-14 by the [reprex
-package](http://reprex.tidyverse.org) (v0.2.0).
+Created on 2018-07-25 by the [reprex package](http://reprex.tidyverse.org) (v0.2.0).
