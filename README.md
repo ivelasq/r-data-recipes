@@ -152,8 +152,8 @@ unnest_wide <- function(.data) {
   lst_index <- purrr::map_int(.data, is.list)
   lst_cols <- names(lst_index)[lst_index == 1L]
   lst_vals <- paste0(lst_cols, ".")
-  unique_vals <- list()
-  tmp <- list()
+  unique_vals <- vector("list", length(lst_cols))
+  tmp <- vector("list", length(lst_cols))
   for (i in seq_along(lst_cols)) {
     unique_vals[[i]] <- stats::na.omit(unique(unlist(.data[[lst_cols[i]]])))
     tmp[[i]] <- dplyr::select(.data, rowid, lst_cols[i])
