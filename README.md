@@ -9,7 +9,7 @@ A family cookbook of data `R`ecipes.
 - [Keep distinct categories](#keep-distinct-categories)
     - Keep distinct instances of a category using `if_else()` and `distinct()`
 - [Reinstall packages after a major R update](#reinstall-packages-after-a-major-r-update)
-    - Reinstall packages from your previous R 3.x library path after a major R update.
+    - Reinstall packages from your previous library after a major R update.
 - [Unnest all list-cols into columns](#unnest-all-list-cols-into-columns)
     - Unnest all list-cols in a data frame into columns for each unique element.
 
