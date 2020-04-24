@@ -100,25 +100,38 @@ df %>%
 
 ## Reinstall packages after a major R update
 
-* Reinstall packages from your previous R 3.x library path after a major R update. Note that RStudio will prompt you to restart R repeatedly; to keep the script going keep pressing "No" when this happens.
+* Reinstall packages from your previous library after a major R update. This will work even if upgrading from R 3.x to 4.x. Note that RStudio may prompt you to restart R repeatedly; to keep the script going keep pressing "No" when this happens.
 ```r
 # setup
 if (!require(tidyverse)) install.packages("tidyverse")
+if (!require(fs)) install.packages("fs")
 library(tidyverse)
-# get the new and old R versions as strings
-new_r <- str_sub(.rs.rVersionString(), 1L, 3L)
-old_r <- as.character(as.numeric(new_r) - 0.1)
-# get your new and old R library paths
-new_l <- .libPaths()
-old_l <- str_replace(new_l, new_r, old_r)
-# get the list of old installed packages
-pkg_list <- as.list(list.files(old_l))
-# install all packages listed in pkg_list
+library(fs)
+# cue music
+r_dir <-
+  # get all installed R versions
+  tibble::tibble(path = fs::dir_ls(path = "/Library/Frameworks/R.framework/Versions/")) %>%
+  # drop current R version
+  dplyr::filter(!(stringr::str_detect(path, "Current"))) %>%
+  # extract the current and penultimate R versions as strings
+  dplyr::rowwise() %>%
+  dplyr::mutate(version = as.numeric(stringr::str_extract(path, "[0-9]\\.[0-9]"))) %>%
+  dplyr::ungroup() %>%
+  dplyr::mutate(new_r = dplyr::nth(version, -1L), old_r = dplyr::nth(version, -2L)) %>%
+  dplyr::mutate_at(vars("new_r", "old_r"), ~as.character(formatC(.x, digits = 1L, format = "f"))) %>%
+  dplyr::filter(version == old_r)
+# get new and old R library paths
+new_libpath <- .libPaths()
+old_libpath <- stringr::str_replace(new_libpath, r_dir$new_r, r_dir$old_r)
+# get list of old installed R packages
+pkg_list <- as.list(list.files(old_libpath))
+# define install_all() function
 install_all <- function(x) {
   print(x)
   install.packages(x, quiet = TRUE)
 }
-quietly(lapply(pkg_list, install_all))
+# install all R packages in pkg_list
+purrr::quietly(purrr::walk(pkg_list, install_all))
 ```
 
 ## Unnest all list-cols into columns
