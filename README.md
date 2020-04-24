@@ -107,10 +107,15 @@ if (!require(tidyverse)) install.packages("tidyverse")
 if (!require(fs)) install.packages("fs")
 library(tidyverse)
 library(fs)
+# get all installed R versions
+if (Sys.info()[["sysname"]] == "Darwin") { 
+  r_dir <- tibble::tibble(path = fs::dir_ls(fs::path_dir(fs::path_dir(fs::path_dir(.libPaths()[[1]])))))
+}
+if (Sys.info()[["sysname"]] %in% c("Linux", "Windows")) {
+  r_dir <- tibble::tibble(path = fs::dir_ls(fs::path_dir(.libPaths()[[1]])))
+}
 # cue music
-r_dir <-
-  # get all installed R versions
-  tibble::tibble(path = fs::dir_ls(path = "/Library/Frameworks/R.framework/Versions/")) %>%
+r_dir <- r_dir %>%
   # drop current R version
   dplyr::filter(!(stringr::str_detect(path, "Current"))) %>%
   # extract the current and penultimate R versions as strings
