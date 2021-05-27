@@ -1,4 +1,4 @@
-# r-data-recipes
+# r-data-recipes <img src='man/figures/logo.png' align="right" height="150" />
 
 A family cookbook of data `R`ecipes.
 
