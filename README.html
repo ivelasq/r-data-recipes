@@ -191,6 +191,10 @@ pre code {
 <ul>
 <li>Unnest all list-cols in a data frame into columns for each unique element.</li>
 </ul></li>
+<li><a href="#apply-complex-logic-across-multiple-columns">Apply complex logic across multiple columns</a>
+<ul>
+<li>Use <code>across()</code> with <code>case_when()</code> to apply the same logic to multiple columns.</li>
+</ul></li>
 </ul>
 <div id="row-totals" class="section level2">
 <h2>Row totals</h2>
@@ -381,7 +385,51 @@ unnest_wide &lt;- function(.data) {
 #&gt; 1 one   four  four  five  six   four  five  six  
 #&gt; 2 two   five  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  four  &lt;NA&gt;  &lt;NA&gt; 
 #&gt; 3 three six   &lt;NA&gt;  five  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  six</code></pre>
-<p>Created on 2018-07-25 by the <a href="http://reprex.tidyverse.org">reprex package</a> (v0.2.0).</p>
+<p><sup>Created on 2018-07-25 by the <a href="http://reprex.tidyverse.org">reprex package</a> (v0.2.0).</sup></p>
+</div>
+<div id="apply-complex-logic-across-multiple-columns" class="section level2">
+<h2>Apply complex logic across multiple columns</h2>
+<ul>
+<li>Use <code>across()</code> with <code>case_when()</code> to apply the same logic to multiple columns.</li>
+</ul>
+<pre class="r"><code>library(dplyr, warn.conflicts = FALSE)
+library(magrittr)
+library(palmerpenguins)
+penguins %&lt;&gt;%
+  mutate(
+    bill_length_quartile = ntile(bill_length_mm, 4L),
+    bill_depth_quartile = ntile(bill_depth_mm, 4L)
+  ) %&gt;%
+  mutate(
+    across(
+      .cols = contains(&quot;quartile&quot;),
+      .fns = ~ case_when(
+        .x == 4L ~ 1L,
+        !is.na(.x) ~ 0L,
+        TRUE ~ NA_integer_
+      ),
+      .names = &quot;top_{.col}&quot;
+    )
+  )
+penguins %&gt;%
+  group_by(species) %&gt;%
+  filter(top_bill_length_quartile == 1L) %&gt;%
+  summarize(n_in_top_bill_length_quartile = n())
+#&gt; # A tibble: 2 x 2
+#&gt;   species   n_in_top_bill_length_quartile
+#&gt;   &lt;fct&gt;                             &lt;int&gt;
+#&gt; 1 Chinstrap                            40
+#&gt; 2 Gentoo                               45
+penguins %&gt;%
+  group_by(species) %&gt;%
+  filter(top_bill_depth_quartile == 1L) %&gt;%
+  summarize(n_in_top_bill_depth_quartile = n())
+#&gt; # A tibble: 2 x 2
+#&gt;   species   n_in_top_bill_depth_quartile
+#&gt;   &lt;fct&gt;                            &lt;int&gt;
+#&gt; 1 Adelie                              54
+#&gt; 2 Chinstrap                           31</code></pre>
+<p><sup>Created on 2021-06-02 by the <a href="https://reprex.tidyverse.org">reprex package</a> (v2.0.0)</sup></p>
 </div>
 </div>
 

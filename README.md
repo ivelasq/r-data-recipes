@@ -12,6 +12,8 @@ A family cookbook of data `R`ecipes.
     - Reinstall packages from your previous library after a major R update.
 - [Unnest all list-cols into columns](#unnest-all-list-cols-into-columns)
     - Unnest all list-cols in a data frame into columns for each unique element.
+- [Apply complex logic across multiple columns](#apply-complex-logic-across-multiple-columns)
+    - Use `across()` with `case_when()` to apply the same logic to multiple columns.
 
 ## Row totals
 
@@ -202,5 +204,48 @@ unnest_wide <- function(.data) {
 #> 2 two   five  <NA>  <NA>  <NA>  four  <NA>  <NA> 
 #> 3 three six   <NA>  five  <NA>  <NA>  <NA>  six
 ```
+<sup>Created on 2018-07-25 by the [reprex package](http://reprex.tidyverse.org) (v0.2.0).</sup>
 
-Created on 2018-07-25 by the [reprex package](http://reprex.tidyverse.org) (v0.2.0).
+## Apply complex logic across multiple columns
+
+* Use `across()` with `case_when()` to apply the same logic to multiple columns.
+``` r
+library(dplyr, warn.conflicts = FALSE)
+library(magrittr)
+library(palmerpenguins)
+penguins %<>%
+  mutate(
+    bill_length_quartile = ntile(bill_length_mm, 4L),
+    bill_depth_quartile = ntile(bill_depth_mm, 4L)
+  ) %>%
+  mutate(
+    across(
+      .cols = contains("quartile"),
+      .fns = ~ case_when(
+        .x == 4L ~ 1L,
+        !is.na(.x) ~ 0L,
+        TRUE ~ NA_integer_
+      ),
+      .names = "top_{.col}"
+    )
+  )
+penguins %>%
+  group_by(species) %>%
+  filter(top_bill_length_quartile == 1L) %>%
+  summarize(n_in_top_bill_length_quartile = n())
+#> # A tibble: 2 x 2
+#>   species   n_in_top_bill_length_quartile
+#>   <fct>                             <int>
+#> 1 Chinstrap                            40
+#> 2 Gentoo                               45
+penguins %>%
+  group_by(species) %>%
+  filter(top_bill_depth_quartile == 1L) %>%
+  summarize(n_in_top_bill_depth_quartile = n())
+#> # A tibble: 2 x 2
+#>   species   n_in_top_bill_depth_quartile
+#>   <fct>                            <int>
+#> 1 Adelie                              54
+#> 2 Chinstrap                           31
+```
+<sup>Created on 2021-06-02 by the [reprex package](https://reprex.tidyverse.org) (v2.0.0)</sup>
