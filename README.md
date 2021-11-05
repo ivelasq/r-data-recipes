@@ -14,6 +14,8 @@ A family cookbook of data `R`ecipes.
     - Unnest all list-cols in a data frame into columns for each unique element.
 - [Apply complex logic across multiple columns](#apply-complex-logic-across-multiple-columns)
     - Use `across()` with `case_when()` to apply the same logic to multiple columns.
+- [Find all matching variables in all data frames](#find-all-matching-variables-in-all-data-frames)
+    - Find all matching variables in all data frames in the global environment.
 
 ## Row totals
 
@@ -249,3 +251,44 @@ penguins %>%
 #> 2 Chinstrap                           31
 ```
 <sup>Created on 2021-06-02 by the [reprex package](https://reprex.tidyverse.org) (v2.0.0)</sup>
+
+## Find all matching variables in all data frames
+
+* Find all matching variables in all data frames in the global environment.
+
+``` r
+# setup
+suppressPackageStartupMessages(library(tidyverse))
+library(cli)
+# define `find_var()`
+find_var <- function(x, env = globalenv()) {
+  obj_idx <- ls(envir = env)[-which(ls(envir = env) == "find_var")]
+  vars <- NULL
+  for (i in seq_along(obj_idx)) {
+    if (is.data.frame(get(obj_idx[i]))) {
+      var <- grep(x, names(get(obj_idx[i])), value = TRUE)
+      if (length(var) > 0L) {
+        vars <- c(vars, str_glue("{obj_idx[i]}${var}"))
+      }
+    }
+  }
+  if (is.null(vars)) {
+    cli_alert_danger("Found no variables.")
+  }
+  if (length(vars) > 0L) {
+    cli_alert_success(pluralize("Found {length(vars)} variable{?s}: {vars}"))
+  }
+}
+# no matching variables
+find_var("cyl")
+#> x Found no variables.
+# one matching variable
+a <- mtcars
+find_var("cyl")
+#> ✓ Found 1 variable: a$cyl
+# several matching variables
+b <- mtcars %>% mutate(cyl2 = cyl, cyl3 = cyl, cyl4 = cyl)
+find_var("cyl")
+#> ✓ Found 5 variables: a$cyl, b$cyl, b$cyl2, b$cyl3, and b$cyl4
+```
+<sup>Created on 2021-11-04 by the [reprex package](https://reprex.tidyverse.org) (v2.0.1)</sup>
