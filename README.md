@@ -4,6 +4,8 @@ A family cookbook of data `R`ecipes.
 
 - [Row totals](#row-totals)
     - Calculate row totals using `rowwise()`, `do()`, and `case_when()`
+- [Row-wise string matching](#row-wise-string-matching)
+    - Use `across()` or `c_across()` inside `case_when()`
 - [Partial string matching](#partial-string-matching)
     - `%gin%`: A reimagination of `%in%` using `grepl()` for partial string matching
 - [Keep distinct categories](#keep-distinct-categories)
@@ -54,6 +56,92 @@ case_when(
         TRUE ~ NA_real_)
 ) %>% unlist %>% as_tibble %>% bind_cols(df, .)
 ```
+
+## Row-wise string matching
+
+* Use `across()` or `c_across()` inside `case_when()`.
+``` r
+# 1. setup ----
+library(dplyr, warn.conflicts = FALSE)
+library(magrittr)
+library(stringr)
+library(palmerpenguins)
+# 2. data ----
+set.seed(42L)
+penguins %<>%
+  mutate(
+    island_two = sample(island),
+    island_three = sample(island)
+  )
+penguins %>% select(species, contains("island"))
+#> # A tibble: 344 × 4
+#>    species island    island_two island_three
+#>    <fct>   <fct>     <fct>      <fct>       
+#>  1 Adelie  Torgersen Dream      Dream       
+#>  2 Adelie  Torgersen Dream      Biscoe      
+#>  3 Adelie  Torgersen Biscoe     Biscoe      
+#>  4 Adelie  Torgersen Torgersen  Biscoe      
+#>  5 Adelie  Torgersen Biscoe     Torgersen   
+#>  6 Adelie  Torgersen Dream      Biscoe      
+#>  7 Adelie  Torgersen Torgersen  Biscoe      
+#>  8 Adelie  Torgersen Dream      Biscoe      
+#>  9 Adelie  Torgersen Torgersen  Torgersen   
+#> 10 Adelie  Torgersen Dream      Biscoe      
+#> # … with 334 more rows
+# 3. case_when then across ----
+penguins_same_string <-
+  penguins %>% 
+  rowwise() %>%
+  mutate(
+    like_islands = case_when(
+      any(across(contains("island")) == "Dream") ~ 1L,
+      TRUE ~ 0L
+    )
+  )
+penguins_same_string %>% select(species, contains("island"))
+#> # A tibble: 344 × 5
+#> # Rowwise: 
+#>    species island    island_two island_three like_islands
+#>    <fct>   <fct>     <fct>      <fct>               <int>
+#>  1 Adelie  Torgersen Dream      Dream                   1
+#>  2 Adelie  Torgersen Dream      Biscoe                  1
+#>  3 Adelie  Torgersen Biscoe     Biscoe                  0
+#>  4 Adelie  Torgersen Torgersen  Biscoe                  0
+#>  5 Adelie  Torgersen Biscoe     Torgersen               0
+#>  6 Adelie  Torgersen Dream      Biscoe                  1
+#>  7 Adelie  Torgersen Torgersen  Biscoe                  0
+#>  8 Adelie  Torgersen Dream      Biscoe                  1
+#>  9 Adelie  Torgersen Torgersen  Torgersen               0
+#> 10 Adelie  Torgersen Dream      Biscoe                  1
+#> # … with 334 more rows
+# 4. case_when then c_across ----
+penguins_same_partial_string <-
+  penguins %>% 
+  rowwise() %>%
+  mutate(
+    like_islands = case_when(
+      any(str_detect(c_across(contains("island")), "Dre")) ~ 1L,
+      TRUE ~ 0L
+    )
+  )
+penguins_same_partial_string %>% select(species, contains("island"))
+#> # A tibble: 344 × 5
+#> # Rowwise: 
+#>    species island    island_two island_three like_islands
+#>    <fct>   <fct>     <fct>      <fct>               <int>
+#>  1 Adelie  Torgersen Dream      Dream                   1
+#>  2 Adelie  Torgersen Dream      Biscoe                  1
+#>  3 Adelie  Torgersen Biscoe     Biscoe                  0
+#>  4 Adelie  Torgersen Torgersen  Biscoe                  0
+#>  5 Adelie  Torgersen Biscoe     Torgersen               0
+#>  6 Adelie  Torgersen Dream      Biscoe                  1
+#>  7 Adelie  Torgersen Torgersen  Biscoe                  0
+#>  8 Adelie  Torgersen Dream      Biscoe                  1
+#>  9 Adelie  Torgersen Torgersen  Torgersen               0
+#> 10 Adelie  Torgersen Dream      Biscoe                  1
+#> # … with 334 more rows
+```
+<sup>Created on 2022-04-15 by the [reprex package](https://reprex.tidyverse.org) (v2.0.1)</sup>
 
 ## Partial string matching
 
@@ -255,7 +343,6 @@ penguins %>%
 ## Find all matching variables in all data frames
 
 * Find all matching variables in all data frames in the global environment.
-
 ``` r
 # setup
 suppressPackageStartupMessages(library(tidyverse))
