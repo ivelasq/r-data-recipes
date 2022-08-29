@@ -36,3 +36,6 @@ vignettes/*.pdf
 
 # macOS files
 .DS_Store
+
+# Other files
+*.html
