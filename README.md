@@ -1,5 +1,9 @@
 # r-data-recipes <img src='man/figures/logo.png' align="right" height="150" />
 
+<!-- badges: start -->
+[![Launch RStudio Cloud](https://img.shields.io/badge/launch-cloud-75aadb?style=flat&logo=rstudio)](https://rstudio.cloud/project/4408783)
+<!-- badges: end -->
+
 A family cookbook of data `R`ecipes.
 
 - [Row totals](#row-totals)
