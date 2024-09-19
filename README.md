@@ -22,6 +22,8 @@ A family cookbook of data `R`ecipes.
     - Use `across()` with `case_when()` to apply the same logic to multiple columns.
 - [Find all matching variables in all data frames](#find-all-matching-variables-in-all-data-frames)
     - Find all matching variables in all data frames in the global environment.
+- [Extract rowwise maximum value, index, and column name](#extract-rowwise-maximum-value-index-and-column-name)
+    - Extract rowwise maximum value, column index of the maximum value, and column name of the maximum value.
 
 ## Row totals
 
@@ -383,3 +385,76 @@ find_var("cyl")
 #> ✓ Found 5 variables: a$cyl, b$cyl, b$cyl2, b$cyl3, and b$cyl4
 ```
 <sup>Created on 2021-11-04 by the [reprex package](https://reprex.tidyverse.org) (v2.0.1)</sup>
+
+## Extract rowwise maximum value, index, and column name
+
+* Extract rowwise maximum value, column index of the maximum value, and column name of the maximum value.
+
+``` r
+# 1. setup ----
+library(bench)
+library(matrixStats)
+library(tidyverse)
+
+# 2. data ----
+set.seed(42)
+prob <-
+  tibble(
+    prob1 = sample(seq(0.1, 1.0, 0.1), 10),
+    prob2 = sample(seq(0.1, 1.0, 0.1), 10),
+    prob3 = sample(seq(0.1, 1.0, 0.1), 10),
+    prob4 = sample(seq(0.1, 1.0, 0.1), 10),
+    prob5 = sample(seq(0.1, 1.0, 0.1), 10)
+  )
+nms <- prob %>% select(starts_with('prob')) %>% names()
+
+# 3. benchmark max ----
+m1 <-
+  mark(
+    pmax = prob %>% mutate(prob_max = pmax(!!!syms(nms))),
+    rowmaxs = prob %>% mutate(prob_max = rowMaxs(as.matrix(prob %>% select(all_of(nms))))),
+    rowwise_max = prob %>% rowwise() %>% mutate(prob_max = max(c_across(all_of(nms)))) %>% ungroup()
+  )
+m1
+#> # A tibble: 3 × 6
+#>   expression       min   median `itr/sec` mem_alloc `gc/sec`
+#>   <bch:expr>  <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
+#> 1 pmax        275.15µs 283.47µs     3476.     1.2MB     69.1
+#> 2 rowmaxs     603.36µs 620.47µs     1580.    89.6KB     59.9
+#> 3 rowwise_max   2.36ms   2.41ms      410.   426.3KB     73.4
+
+# 4. benchmark which ----
+m2 <-
+  mark(
+    max_col = prob %>% mutate(which_max = max.col(as.matrix(prob %>% select(all_of(nms))), ties.method = "first")),
+    which_max = prob %>% rowwise() %>% mutate(which_max = which.max(c_across(all_of(nms)))) %>% ungroup()
+  )
+m2
+#> # A tibble: 2 × 6
+#>   expression      min   median `itr/sec` mem_alloc `gc/sec`
+#>   <bch:expr> <bch:tm> <bch:tm>     <dbl> <bch:byt>    <dbl>
+#> 1 max_col    616.93µs 638.08µs     1547.    16.8KB     20.8
+#> 2 which_max    2.38ms   2.44ms      405.    27.6KB     24.2
+
+# 5. extract maximum value, index, name ---
+prob %>%
+  mutate(
+    prob_max = pmax(!!!syms(nms)),
+    which_max = max.col(as.matrix(prob %>% select(all_of(nms))), ties.method = "first"),
+    name_max = nms[which_max]
+  )
+#> # A tibble: 10 × 8
+#>    prob1 prob2 prob3 prob4 prob5 prob_max which_max name_max
+#>    <dbl> <dbl> <dbl> <dbl> <dbl>    <dbl>     <int> <chr>   
+#>  1   0.1   0.8   0.9   0.3   0.5      0.9         3 prob3   
+#>  2   0.5   0.7   1     0.1   0.4      1           3 prob3   
+#>  3   1     0.4   0.3   0.2   0.2      1           1 prob1   
+#>  4   0.8   0.1   0.4   0.6   0.8      0.8         1 prob1   
+#>  5   0.2   0.5   0.5   1     0.3      1           4 prob4   
+#>  6   0.4   1     0.6   0.8   0.1      1           2 prob2   
+#>  7   0.6   0.2   0.1   0.4   1        1           5 prob5   
+#>  8   0.9   0.6   0.2   0.5   0.7      0.9         1 prob1   
+#>  9   0.7   0.9   0.8   0.7   0.6      0.9         2 prob2   
+#> 10   0.3   0.3   0.7   0.9   0.9      0.9         4 prob4
+```
+<sup>Created on 2024-09-19 with [reprex v2.1.1](https://reprex.tidyverse.org)</sup>
